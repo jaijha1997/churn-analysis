@@ -3,7 +3,6 @@ Feature engineering pipeline.
 Transforms raw customer data into model-ready features.
 
 TODO:
-- Add RFM (Recency/Frequency/Monetary) features
 - Add rolling window aggregations once we have time-series data
 - Normalize engagement_score across segments
 """
@@ -11,7 +10,6 @@ TODO:
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
-from typing import Tuple
 import joblib
 import logging
 
@@ -45,6 +43,9 @@ class ChurnFeatureEngineer:
         # Revenue trend proxy — are they a high-value customer relative to their tenure?
         df["revenue_trend"] = df["total_charges"] / (df["monthly_charges"] * df["tenure_months"]).clip(0.01)
         df["revenue_trend"] = df["revenue_trend"].clip(0, 2)
+
+        # RFM-style recency score — penalizes customers who haven't logged in recently
+        df["recency_score"] = (1 - df["last_login_days_ago"] / 90).clip(0, 1)
 
         logger.info(f"Built features for {len(df)} customers")
         return df
